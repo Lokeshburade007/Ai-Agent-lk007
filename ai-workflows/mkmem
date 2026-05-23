@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# mkmem — drop a fresh .ai/ memory scaffold into any project.
+#
+# Installed at: $HOME/bin/mkmem (this file is the source of truth in the repo).
+# To deploy: cp ai-workflows/mkmem ~/bin/mkmem && chmod +x ~/bin/mkmem
+
+set -euo pipefail
+
+AGENT_BASE="${AGENT_BASE:-$HOME/Documents/LK/Important/PersonalAIAgent}"
+TEMPLATE="$AGENT_BASE/ai-memory/memory/projects/_template/.ai"
+
+usage() {
+  cat <<EOF
+Usage: mkmem [<target-project-dir>]
+
+Copies the project-memory .ai/ scaffold into the target directory.
+If no target is provided, uses the current directory.
+
+The scaffold includes:
+  .ai/architecture.md     — project shape, stack, boundaries
+  .ai/patterns.md         — project-specific conventions
+  .ai/api.md              — endpoint / function inventory
+  .ai/data-model.md       — schema overview
+  .ai/decisions/0001-template.md — ADR template
+  .ai/glossary.md         — domain terms
+
+After running, edit each file to reflect your actual project.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage; exit 0
+fi
+
+TARGET="${1:-$PWD}"
+
+if [[ ! -d "$TARGET" ]]; then
+  echo "mkmem: target directory does not exist: $TARGET" >&2
+  exit 1
+fi
+
+if [[ ! -d "$TEMPLATE" ]]; then
+  echo "mkmem: template not found at $TEMPLATE" >&2
+  echo "       (is AGENT_BASE set correctly? currently: $AGENT_BASE)" >&2
+  exit 1
+fi
+
+if [[ -d "$TARGET/.ai" ]]; then
+  echo "mkmem: $TARGET/.ai already exists. Refusing to overwrite." >&2
+  echo "       Remove or rename it first, or edit in place." >&2
+  exit 1
+fi
+
+cp -R "$TEMPLATE" "$TARGET/.ai"
+echo "mkmem: scaffolded $TARGET/.ai/"
+echo ""
+echo "Next:"
+echo "  cd \"$TARGET\""
+echo "  \$EDITOR .ai/architecture.md  # fill in the project shape"
+echo ""
+echo "  # Add this to .aider.conf.yml so the agent always sees it:"
+echo "  cat >> .aider.conf.yml <<'YAML'"
+echo "  read:"
+echo "    - .ai/architecture.md"
+echo "    - .ai/patterns.md"
+echo "  YAML"

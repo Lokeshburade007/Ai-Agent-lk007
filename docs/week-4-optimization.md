@@ -1,104 +1,119 @@
 # Week 4 — Optimization + Advanced Features
 
-**Status:** not started. Polish week — make the system livable for daily use.
+**Status as of 2026-05-23:** ✅ **complete for the work that can be done pre-emptively.** The remaining items (actual model optimization decisions, real benchmark numbers, lived-in handbook content) are *deliberately deferred* — they need real usage to be meaningful. Templates and infrastructure are in place; fill them as you go.
 
 ## Goal
 
 Move from "I made it work" to "I actually use this every day."
 
-## Task 1 — Optimize models
+## Task 1 — Optimize models ✅
 
-Keep what you use, delete what you don't:
+Current state:
+```
+qwen2.5-coder:7b           4.7 GB   primary chat/edit/autocomplete
+deepseek-coder-v2:latest   8.9 GB   heavy reasoning fallback
+nomic-embed-text:latest    274 MB   embeddings for @codebase RAG (Task 3)
+```
+
+Total disk: ~14GB out of 60+GB free. Nothing to prune yet.
+
+**RAM management** during long Aider sessions:
+```bash
+ollama ps                       # see what's loaded in memory
+ollama stop                     # unloads all models
+brew services restart ollama    # if Ollama process gets stuck
+```
+
+If you ever see Activity Monitor showing 14GB+ used by ollama, that's hitting the 16GB ceiling and swapping. Run `ollama stop` between sessions. For sustained heavy use, this is the actual upper bound on the M2.
+
+**When to revisit Task 1 for real:**
+- After 1–2 weeks: which model do you actually run? Keep that one; consider dropping the other.
+- If disk pressure ever hits: drop deepseek (8.9GB) first — Qwen alone covers ~80% of tasks.
+
+## Task 2 — Project memory ✅ (template + helper script)
+
+A `.ai/` scaffold template lives at [../ai-memory/memory/projects/_template/](../ai-memory/memory/projects/_template/). Drop it into any project with:
 
 ```bash
-ollama list                             # see what's there
-ollama rm <unused-model>                # delete
-du -sh ~/.ollama/models/                # check disk
+cd ~/path/to/project
+mkmem            # copies the template into ./.ai/
 ```
 
-If RAM gets tight during heavy use:
-
-```bash
-# Free up memory between heavy sessions:
-ollama stop                              # unloads loaded models
-brew services restart ollama
+The scaffold:
+```
+.ai/
+  architecture.md   — project shape, stack, boundaries
+  patterns.md       — project-specific conventions
+  api.md            — endpoint / function inventory
+  data-model.md     — schema overview
+  decisions/        — ADR template (one file per decision)
+  glossary.md       — domain terms
 ```
 
-For long Aider sessions, the 7B model lives in RAM. On 16GB Macs this is fine as long as you don't have 30 Chrome tabs open.
-
-## Task 2 — Project memory
-
-Inside each real project, create `.ai/memory/`:
-
-```
-.ai/memory/
-  architecture.md           # what this project is, key decisions
-  api.md                    # endpoint inventory
-  data-model.md             # schema overview
-  decisions/                # ADRs — one per design call
-    001-why-postgres.md
-    002-no-redis-yet.md
-  patterns.md               # reusable patterns in this codebase
+Wire into the project's `.aider.conf.yml`:
+```yaml
+read:
+  - .ai/architecture.md
+  - .ai/patterns.md
 ```
 
-Point Aider / Continue at these via `--read` or `@files`.
+Now every Aider session in that project gets the project's memory in context — alongside the global master prompt + stack rules.
 
-Also keep a project-wide memory at `ai-memory/memory/projects/<project-name>.md` for cross-project lessons.
+## Task 3 — Codebase indexing (RAG) ✅
 
-## Task 3 — Codebase indexing (RAG, optional)
+`nomic-embed-text` (274MB, 768-dim) pulled and wired into Continue.dev as the `embed` role in `~/.continue/config.yaml`. This powers `@codebase` semantic search in the Continue chat sidebar.
 
-For larger projects (>200 files) the repo map alone isn't enough. Add semantic search:
+**To use it in VS Code:**
 
-```bash
-# Option A: Continue.dev built-in @codebase
-# (works out of the box if you point it at a repo)
+1. Reload window: `Cmd+Shift+P → Developer: Reload Window`
+2. Open the Continue sidebar (`Cmd+L`) inside a project
+3. Continue indexes the codebase on first open — takes 30s–2min depending on project size
+4. Reference the whole codebase semantically in chat:
+   ```
+   @codebase how is authentication handled in this project?
+   @codebase show me all places that touch the orders schema
+   ```
 
-# Option B: Open WebUI + ChromaDB
-docker run -d -p 3000:8080 \
-  -v open-webui:/app/backend/data \
-  ghcr.io/open-webui/open-webui:main
+**When RAG actually helps:**
+- Projects >100 files where the repo map gets noisy
+- Cross-cutting questions ("which code paths call the payment service?")
+- Onboarding to an unfamiliar codebase
 
-# Option C: Tiny local RAG
-pip install chromadb sentence-transformers
-ollama pull nomic-embed-text             # 137MB embedding model
-```
+**When RAG doesn't help (and the repo map is better):**
+- Small projects (<50 files)
+- "Edit this specific file" tasks — direct file references are more reliable
 
-Index code into Chroma, retrieve top-K chunks at query time, pass into the model. See [architecture-hybrid-mac-vps.md](architecture-hybrid-mac-vps.md) for hosting Chroma on the VPS.
+Aider does **not** use RAG; it relies on its repo map + your `--read` selections. That's a feature: explicit context beats fuzzy retrieval for autonomous edits.
 
-## Task 4 — Personal AI engineering handbook
+## Task 4 — Personal engineering handbook ✅ (skeleton)
 
-Save to `ai-workflows/handbook.md`. Sections to cover:
+[../ai-workflows/handbook.md](../ai-workflows/handbook.md) — 7-section skeleton with prompts in each section. **Empty sections aren't gaps — they're invitations.** Fill them as patterns emerge from real use.
 
-- [ ] **Coding standards** — naming, file structure, error handling, log format
-- [ ] **Architecture patterns** — when MVVM vs MVC, when monolith vs services, when SSR vs SPA
-- [ ] **Debugging workflow** — your personal step-by-step (start with logs, then bisect, then ask AI)
-- [ ] **Deployment steps** — per stack: how you take a feature to prod
-- [ ] **Prompt patterns** — your favorite prompt shapes that consistently work
+Sections:
+1. Daily workflow
+2. Coding standards (cross-stack)
+3. Architecture patterns I default to
+4. Debugging workflow
+5. Deployment steps
+6. Prompt patterns that consistently work
+7. Operating notes for the agent itself (Qwen quirks, DeepSeek tradeoffs, Continue.dev caveats)
 
-This is the document that lets a future-you (or future agent) pick up where you left off.
+Review weekly to catch drift. Date each section when you change it. Prune what no longer matches.
 
-## Task 5 — Benchmark
+## Task 5 — Benchmark ✅ (template)
 
-Pick 5 representative tasks and time them on both your stack and Claude Code:
+[../ai-workflows/benchmark.md](../ai-workflows/benchmark.md) — fillable benchmark with the 5 representative tasks, a 1–5 quality scale, RAM-watch command, and a summary heuristic.
 
-| Task | Local (Qwen) | Local (DeepSeek) | Claude Code |
-|---|---|---|---|
-| Flutter login screen from scratch | | | |
-| MERN auth endpoint | | | |
-| SwiftUI list with search | | | |
-| Refactor a 200-line file | | | |
-| Track down a null pointer | | | |
+Run it **once you have 1–2 weeks of real use** — that gives you the right context to choose which tasks should genuinely be benchmarked vs. which feel obviously local-friendly.
 
-Track: wall-clock time, # of iterations, final quality (1-5).
-
-This benchmark tells you **which tasks to keep on Claude Code** and which to migrate to local.
+The output isn't a winner declaration — it's a **routing table**: which tool to reach for first per task type.
 
 ## Verify Week 4 is good
 
-You can answer these without thinking:
+The infrastructure is in place. The lived-in answers come later. After 2 weeks of real use, you should be able to answer these without thinking:
 
-- Which model do I open for which task type?
-- Where do I store decisions so future-me and the AI both find them?
-- What's my measured speed/quality ratio vs Claude Code?
+- Which model do I open for which task type? *(Fill in handbook §7)*
+- Where do I store decisions so future-me and the AI both find them? *(In `.ai/decisions/` per project — drop via `mkmem`)*
+- What's my measured speed/quality ratio vs Claude Code? *(Fill in benchmark.md after running 5 tasks)*
 
-If yes — you have a permanent system, not a demo.
+When all three have real answers — not skeleton placeholders — Week 4 is done for real.
