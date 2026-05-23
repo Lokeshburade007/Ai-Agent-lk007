@@ -20,8 +20,12 @@ gitignore: true
 # Qwen2.5-Coder 7B supports up to 32k tokens
 # Set via env var below — see OLLAMA_NUM_CTX
 
-# Files to always read in as context (paths relative to where you run aider)
-# Uncomment and edit per project:
-# read:
-#   - ai-prompts/prompts/system/master.md
-#   - ai-memory/rules/.react-rules.md
+# Files always read as context. Paths relative to where you run aider (this dir).
+# Project-specific stacks: add the matching rule file per project (uncomment).
+read:
+  - ai-prompts/prompts/system/master.md
+  # - ai-memory/rules/node-rules.md
+  # - ai-memory/rules/react-rules.md
+  # - ai-memory/rules/flutter-rules.md
+  # - ai-memory/rules/swiftui-rules.md
+  # - ai-memory/rules/golang-rules.md

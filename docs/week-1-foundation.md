@@ -1,6 +1,6 @@
 # Week 1 — Foundation + Environment Setup
 
-**Status as of 2026-05-23:** mostly done. DeepSeek pull running in background; user has 3 manual follow-ups.
+**Status as of 2026-05-23:** ✅ **complete.** Both models loaded, VS Code wired, monorepo pushed to GitHub, Aider installed and verified end-to-end.
 
 ## Goal
 
@@ -31,26 +31,27 @@ Get a local LLM running, wired into VS Code, with scaffolded repos to host the r
 - [x] `code` CLI symlinked at `~/bin/code`
 - [ ] **MANUAL:** add `export PATH="$HOME/bin:$PATH"` to `~/.zshrc`, then `source ~/.zshrc`
 
-### Task 3 — GitHub repos
-Four repos scaffolded **locally only** (git init + initial commit on `main`, no remote):
-- [x] `ai-prompts/` with `prompts/system/master.md` placeholder + `prompts/specialized/`
-- [x] `ai-memory/` with `memory/debugging/`, `memory/projects/`, `rules/`
-- [x] `starter-templates/`
-- [x] `ai-workflows/`
-- [ ] **MANUAL:** create the four repos on github.com and push:
-  ```bash
-  cd ai-prompts && git remote add origin git@github.com:<you>/ai-prompts.git && git push -u origin main
-  # repeat for ai-memory, starter-templates, ai-workflows
-  ```
+### Task 3 — GitHub repos (evolved to monorepo)
+- [x] Initially scaffolded as 4 separate repos and pushed (ai-prompts, ai-memory, starter-templates, ai-workflows)
+- [x] **Architecture changed mid-session to monorepo** at `github.com/Lokeshburade007/Ai-Agent-lk007`. The 4 sub-repos were absorbed as plain folders.
+- [x] Git author/committer fixed to `Lokeshburade007` (noreply email). Initial `snanydevicess@gmail.com` mapping to a different GitHub account was caught and amended via force-push.
+- [ ] **MANUAL:** delete the 4 obsolete sub-repos: `gh auth refresh -h github.com -s delete_repo` then `gh repo delete Lokeshburade007/{ai-prompts,ai-memory,starter-templates,ai-workflows} --yes`
 
 ### Task 4 — Local coding models
-- [x] `ollama pull qwen2.5-coder:7b` → 4.7GB, ~3 min download
-- [~] `ollama pull deepseek-coder-v2` → 8.9GB, downloading in background
+- [x] `ollama pull qwen2.5-coder:7b` → 4.7GB
+- [x] `ollama pull deepseek-coder-v2` → 8.9GB
 
 ### Task 5 — Smoke test
-- [x] Express auth prompt → Qwen generated correct Express + bcrypt + jwt code in **97 seconds** on M2. Quality note: it inserted a fake-looking bcrypt hash for the demo user, typical of 7B models — replace with real data in real code.
-- [ ] React login (Tailwind) prompt
-- [ ] Flutter clean architecture prompt
+- [x] Express auth prompt → Qwen generated correct code in **97s** on M2 (bcrypt + jwt + `/login` route).
+- [x] Aider auto-file-edit session end-to-end: prompt → SEARCH/REPLACE → diff → commit (`hello.py` + `test_hello.py` in `~/aider-test`). The 7B model made the "function returns None vs string" mistake — that's exactly what the Week 2 master prompt addresses.
+
+### Bonus this session
+- [x] Aider 0.86.2 installed via pipx
+- [x] `~/.aider.conf.yml` + project-local `.aider.conf.yml` configured to use Qwen via Ollama
+- [x] First end-to-end auto-file-edit demo completed
+- [x] `docs/aider-cheatsheet.md` written
+- [ ] **MANUAL:** `pipx install pytest` to close the test loop
+- [ ] **MANUAL:** clean up duplicate `def hello()` in `~/aider-test/hello.py` (one-liner)
 
 ## Key Week 1 decisions made
 

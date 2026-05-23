@@ -1,6 +1,6 @@
 # Week 2 — Prompt Engineering + AI Brain Building
 
-**Status:** not started.
+**Status as of 2026-05-23:** ✅ **complete.** Master prompt + 7 specialized prompts + 5 stack rule files + 5 debugging playbooks all written and committed. Starter templates intentionally documented as "use community scaffolders + apply rules" instead of maintaining frozen boilerplates.
 
 ## Why this week matters more than the others
 
@@ -10,101 +10,86 @@ A 7B local model isn't smarter than Claude Opus — it's a *different shape*. It
 
 The intelligence transfer happens here. After Week 2, your local model behaves much more like a senior engineer because it inherits the patterns you extracted from Claude.
 
-## Task 1 — Master system prompt
+## Task 1 — Master system prompt ✅
 
-Run this prompt in **Claude Code** (not local model — quality matters):
+[ai-prompts/prompts/system/master.md](../ai-prompts/prompts/system/master.md) — senior-engineer behavior tuned for local 7B models. Specifically addresses the failure modes observed in Week 1 Aider sessions:
+- Inventing files not asked for (`main.py` appearing out of nowhere)
+- Mental execution of tested code (no more `assert hello() == "hello"` when `hello()` returns None)
+- Exact SEARCH/REPLACE format rules (no more reflection loops on empty files)
+- Per-stack defaults (MERN, Flutter, SwiftUI, Go)
 
-```
-Create a senior-level AI coding assistant system prompt optimized for:
-- MERN stack (Express, MongoDB, React, Node)
-- Flutter (clean architecture, Riverpod, MVVM)
-- SwiftUI (MVVM, Combine)
-- Golang backend (clean architecture, repository pattern)
-- Scalable architecture, modular design, security best practices
+**Auto-loaded** via `~/.aider.conf.yml` `read:` directive — applies to every Aider session machine-wide.
 
-The prompt should make the assistant:
-- Prefer reusable components and clean abstractions
-- Flag risks (security, performance, scalability) proactively
-- Refuse to generate code without first understanding context
-- Match the conventions of the file/project it's editing
-- Be concise — no over-explanation
-```
+## Task 2 — Specialized prompts ✅
 
-Save the output to: `ai-prompts/prompts/system/master.md` (replacing the placeholder).
+All 7 written. Use with `aider --read ai-prompts/prompts/specialized/<name>.md`:
 
-## Task 2 — Specialized prompts
+- [x] [debugging.md](../ai-prompts/prompts/specialized/debugging.md) — diagnose before fix; hypothesis-driven
+- [x] [architecture-review.md](../ai-prompts/prompts/specialized/architecture-review.md) — staff-engineer review; surface unseen risks
+- [x] [code-optimization.md](../ai-prompts/prompts/specialized/code-optimization.md) — measure first; algorithmic > micro
+- [x] [security-review.md](../ai-prompts/prompts/specialized/security-review.md) — exhaustive OWASP-style checklist
+- [x] [api-design.md](../ai-prompts/prompts/specialized/api-design.md) — REST defaults + idempotency
+- [x] [database-schema.md](../ai-prompts/prompts/specialized/database-schema.md) — Postgres + Mongo conventions
+- [x] [ui-generation.md](../ai-prompts/prompts/specialized/ui-generation.md) — a11y-first; React/Flutter/SwiftUI
 
-Generate one per concern, save to `ai-prompts/prompts/specialized/`:
+## Task 3 — Stack-specific rules library ✅
 
-- [ ] `debugging.md` — systematic bug isolation, hypothesis testing
-- [ ] `architecture-review.md` — design critique, scalability flags
-- [ ] `code-optimization.md` — perf/memory hot-paths
-- [ ] `security-review.md` — OWASP top 10, secrets handling
-- [ ] `api-design.md` — REST/GraphQL conventions, versioning
-- [ ] `database-schema.md` — normalization, indexes, migrations
-- [ ] `ui-generation.md` — accessibility, responsive, design tokens
+All 5 written. Add to a project's `.aider.conf.yml` `read:` block per project:
 
-## Task 3 — Stack-specific rules library
+- [x] [node-rules.md](../ai-memory/rules/node-rules.md) — Express + Mongoose + zod + Pino
+- [x] [react-rules.md](../ai-memory/rules/react-rules.md) — hooks + TanStack Query + react-hook-form + Tailwind
+- [x] [flutter-rules.md](../ai-memory/rules/flutter-rules.md) — clean arch + Riverpod + freezed + go_router
+- [x] [swiftui-rules.md](../ai-memory/rules/swiftui-rules.md) — MVVM + async/await + NavigationStack + SwiftData
+- [x] [golang-rules.md](../ai-memory/rules/golang-rules.md) — clean arch + context propagation + sentinel errors
 
-Drop these in `ai-memory/rules/` (Continue.dev and Aider both read these):
+(File names dropped the leading dot from the original readme.md plan — leading-dot makes them hidden on macOS, which is unhelpful.)
 
-- [ ] `.flutter-rules.md` — clean architecture, Riverpod, MVVM, repository pattern
-- [ ] `.react-rules.md` — hooks, server components, Tailwind, accessibility
-- [ ] `.node-rules.md` — Express, async/await, error middleware, env validation
-- [ ] `.swiftui-rules.md` — MVVM, Combine, navigation, async/await
-- [ ] `.golang-rules.md` — clean architecture, error wrapping, context propagation
+## Task 4 — Starter templates ✅ (strategy documented, not boilerplates committed)
 
-Format each one as:
-```md
-Always use:
-- <pattern>
-- <pattern>
+[starter-templates/README.md](../starter-templates/README.md) explains the deliberate choice: **use community scaffolders + apply our rules** instead of committing frozen boilerplates that rot.
 
-Never use:
-- <antipattern>
-- <antipattern>
+Rationale:
+- A React/Flutter/Go starter committed today is outdated in 3 months.
+- Maintaining 7 starters across dep upgrades is unsustainable for a personal project.
+- `create-react-app`, `vite create`, `flutter create`, `go mod init` + our `ai-memory/rules/*` files do the same job, kept current by their respective communities.
 
-When asked to generate code:
-- Match the file's existing style first
-- Prefer composition over inheritance
-- Keep functions under ~30 lines
-```
+Concrete one-line scaffold commands per stack are in the README.
 
-These files are **the single biggest quality boost** for a local 7B model. Don't skip.
+## Task 5 — Debugging playbooks ✅
 
-## Task 4 — Starter templates
+All 5 written, one per stack:
 
-Use Claude to generate clean boilerplates into `starter-templates/`:
+- [x] [node.md](../ai-memory/memory/debugging/node.md) — async errors, EADDRINUSE, CORS, JWT, slow endpoints
+- [x] [react.md](../ai-memory/memory/debugging/react.md) — infinite rerenders, stale closures, hydration, query dedup
+- [x] [mongo.md](../ai-memory/memory/debugging/mongo.md) — ObjectId mismatches, N+1, ESR indexes, write conflicts
+- [x] [flutter.md](../ai-memory/memory/debugging/flutter.md) — overflow, hot-reload limits, BuildContext-after-async, release-only crashes
+- [x] [swiftui.md](../ai-memory/memory/debugging/swiftui.md) — state ownership, body update cycles, MainActor publishing, Codable errors
 
-- [ ] `mern-starter/` — Express + Mongo + React + Tailwind + auth
-- [ ] `flutter-starter/` — Clean architecture + Riverpod + GoRouter
-- [ ] `swiftui-mvvm-starter/`
-- [ ] `go-backend-starter/` — Echo or Gin + Postgres + clean arch
-- [ ] `auth-boilerplate/` — JWT + refresh tokens + bcrypt
-- [ ] `api-template/` — REST + OpenAPI + rate limit + validation
-- [ ] `docker-template/` — multi-stage builds + compose for dev
+## Week 2 output — how to actually use this stuff
 
-Each should have its own README + working `make dev` / `npm run dev`.
+**Master prompt auto-loads** from `~/.aider.conf.yml` for every Aider session. You don't have to pass it explicitly.
 
-## Task 5 — Debugging playbook
-
-Save to `ai-memory/memory/debugging/`:
-
-- [ ] `flutter.md` — common build/runtime issues, hot-reload gotchas
-- [ ] `node.md` — async error propagation, EADDRINUSE, module resolution
-- [ ] `react.md` — hydration mismatches, stale closures, re-render loops
-- [ ] `mongo.md` — index misses, ObjectId pitfalls, connection pool exhaustion
-- [ ] `swiftui.md` — view update cycles, NavigationStack state, Combine retain cycles
-
-## Week 2 output check
-
-When done, you should be able to:
+For a specific stack + concern, layer extra context with `--read`:
 
 ```bash
-# Aider auto-loads these
-aider --model ollama/qwen2.5-coder:7b \
-  --read ai-prompts/prompts/system/master.md \
-  --read ai-memory/rules/.react-rules.md
+# React UI work
+aider --read ai-memory/rules/react-rules.md \
+      --read ai-prompts/prompts/specialized/ui-generation.md \
+      src/components/LoginForm.tsx
+
+# Debugging a Mongo query
+aider --read ai-memory/rules/node-rules.md \
+      --read ai-memory/memory/debugging/mongo.md \
+      --read ai-prompts/prompts/specialized/debugging.md \
+      src/repositories/userRepo.ts
+
+# Designing a new API endpoint
+aider --read ai-memory/rules/node-rules.md \
+      --read ai-prompts/prompts/specialized/api-design.md \
+      --read ai-prompts/prompts/specialized/security-review.md \
+      src/routes/orders.ts
 ```
 
-and feel the local model behaves like a senior engineer for React work — not like a generic 7B chatbot.
+The senior-engineer behaviors from the master prompt apply by default; stack rules + specialized prompts stack on top per task. **This is the actual "brain" of the local agent.**
+
+A future enhancement (Week 4): a small `agent` shell function that auto-picks `--read` files based on the current project's stack. For now, copy-paste from above.
