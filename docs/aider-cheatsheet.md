@@ -15,6 +15,24 @@ For one-shot tasks:
 aider --message "add /healthz endpoint that returns build sha"
 ```
 
+## Two critical gotchas
+
+### Creating new files
+
+`--message "create X"` alone **does NOT create X**. Aider asks "add X to chat?", can't find X on disk, loops, fails. Always pass the new file as a positional argument:
+
+```bash
+# ✅ Aider creates the empty file first
+aider src/new-component.tsx --message "create a button component..."
+
+# Or via the lkai wrapper:
+lkai --stack react src/new-component.tsx --message "create a button..."
+```
+
+### Interactive prompts
+
+When you don't pass `--message`, Aider runs **interactively** and shows a `>` prompt. Type your request **after** the `>` — don't type `>` yourself. (Yes, that means `>` in shell terminology is a redirect; in Aider it's just the cursor.)
+
 ## Inside the aider prompt — the commands you'll actually use
 
 | Command | What it does |

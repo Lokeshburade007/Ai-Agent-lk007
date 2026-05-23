@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# agent — Aider wrapper that auto-loads stack rules + specialized prompts.
+# lkai — Aider wrapper that auto-loads stack rules + specialized prompts.
 #
-# Installed at: $HOME/bin/agent (this file is the source of truth in the repo).
-# To deploy: cp ai-workflows/agent ~/bin/agent && chmod +x ~/bin/agent
+# Installed at: $HOME/bin/lkai (this file is the source of truth in the repo).
+# To deploy: cp ai-workflows/lkai ~/bin/lkai && chmod +x ~/bin/lkai
+#
+# Renamed from 'agent' because Cursor IDE's cursor-agent CLI uses that name
+# (symlinked at ~/.local/bin/agent) and was shadowing this wrapper.
 #
 # The master system prompt is auto-loaded by ~/.aider.conf.yml,
 # so it's not duplicated in --read here.
@@ -18,7 +21,7 @@ PHASE=""
 
 usage() {
   cat <<EOF
-Usage: agent [--stack <name>] [--concern <name>] [--debug] [--phase <name>] [aider args...]
+Usage: lkai [--stack <name>] [--concern <name>] [--debug] [--phase <name>] [aider args...]
 
   --stack <name>      adds ai-memory/rules/<name>-rules.md
                       one of: node | react | flutter | swiftui | golang
@@ -34,13 +37,20 @@ Usage: agent [--stack <name>] [--concern <name>] [--debug] [--phase <name>] [aid
 All remaining args are passed through to aider.
 
 Examples:
-  agent --phase before --stack react --message "scaffold a settings page"
-  agent --stack react src/components/Login.tsx
-  agent --stack node --concern security-review src/auth/
-  agent --stack node --debug --concern debugging --message "investigate 502 on /api/orders"
-  agent --concern api-design --message "design /v1/orders endpoints"
+  lkai --phase before --stack react --message "scaffold a settings page"
+  lkai --stack react src/components/Login.tsx
+  lkai --stack node --concern security-review src/auth/
+  lkai --stack node --debug --concern debugging --message "investigate 502 on /api/orders"
+  lkai --concern api-design --message "design /v1/orders endpoints"
 
-Override the base dir: AGENT_BASE=/some/path agent ...
+Tips:
+  * To CREATE a new file, pass its path as a positional argument so Aider
+    creates it empty before applying SEARCH/REPLACE:
+      lkai --stack react src/components/Login.tsx --message "create a login form..."
+  * Without --message, aider runs interactively. The '>' you see is aider's
+    prompt — type your request after it, do not type '>' yourself.
+
+Override the base dir: AGENT_BASE=/some/path lkai ...
 EOF
 }
 
@@ -62,8 +72,8 @@ if [[ -n "$STACK" ]]; then
   if [[ -f "$RULE" ]]; then
     READS+=(--read "$RULE")
   else
-    echo "agent: stack rule not found: $RULE" >&2
-    echo "       known stacks: node | react | flutter | swiftui | golang" >&2
+    echo "lkai: stack rule not found: $RULE" >&2
+    echo "      known stacks: node | react | flutter | swiftui | golang" >&2
     exit 1
   fi
 fi
@@ -73,21 +83,21 @@ if [[ -n "$CONCERN" ]]; then
   if [[ -f "$PROMPT" ]]; then
     READS+=(--read "$PROMPT")
   else
-    echo "agent: concern not found: $PROMPT" >&2
+    echo "lkai: concern not found: $PROMPT" >&2
     exit 1
   fi
 fi
 
 if [[ "$INCLUDE_DEBUG_PLAYBOOK" -eq 1 ]]; then
   if [[ -z "$STACK" ]]; then
-    echo "agent: --debug requires --stack" >&2
+    echo "lkai: --debug requires --stack" >&2
     exit 1
   fi
   PLAYBOOK="$AGENT_BASE/ai-memory/memory/debugging/${STACK}.md"
   if [[ -f "$PLAYBOOK" ]]; then
     READS+=(--read "$PLAYBOOK")
   else
-    echo "agent: no debugging playbook for stack '$STACK' — skipping" >&2
+    echo "lkai: no debugging playbook for stack '$STACK' — skipping" >&2
   fi
 fi
 
@@ -96,8 +106,8 @@ if [[ -n "$PHASE" ]]; then
   if [[ -f "$WORKFLOW" ]]; then
     READS+=(--read "$WORKFLOW")
   else
-    echo "agent: phase prompt not found: $WORKFLOW" >&2
-    echo "       known phases: before | during | after" >&2
+    echo "lkai: phase prompt not found: $WORKFLOW" >&2
+    echo "      known phases: before | during | after" >&2
     exit 1
   fi
 fi

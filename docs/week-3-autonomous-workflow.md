@@ -1,6 +1,6 @@
 # Week 3 — Build Autonomous Coding Workflow
 
-**Status as of 2026-05-23:** ✅ **complete.** Aider installed and tested end-to-end (Week 1), Continue.dev wired to local Ollama (this session), workflow prompts written, and an `agent` wrapper script makes everything callable from anywhere with one command.
+**Status as of 2026-05-23:** ✅ **complete.** Aider installed and tested end-to-end (Week 1), Continue.dev wired to local Ollama (this session), workflow prompts written, and an `lkai` wrapper script makes everything callable from anywhere with one command. (Named `lkai` to avoid collision with Cursor IDE's `cursor-agent` CLI which is symlinked as `agent` at `~/.local/bin/agent`.)
 
 ## Goal
 
@@ -26,7 +26,7 @@ For tab completion: just start typing in any file — gray-text suggestions shou
 
 The original plan called for a `.ai-rules.md` in every project. After Week 2, this is largely covered by:
 
-- **Stack rules** in `ai-memory/rules/<stack>-rules.md` (loaded via `agent --stack <name>` or per-project `.aider.conf.yml`)
+- **Stack rules** in `ai-memory/rules/<stack>-rules.md` (loaded via `lkai --stack <name>` or per-project `.aider.conf.yml`)
 - **Master prompt** auto-loaded into every Aider session via `~/.aider.conf.yml`
 - **Continue's inline rules** in `~/.continue/config.yaml`
 
@@ -47,34 +47,34 @@ Things to avoid:
 - <e.g. "don't import lodash — use ramda">
 ```
 
-## Task 3 — Install Aider
+## Task 3 — Install Aider ✅ (done day 1)
+
+Aider 0.86.2 installed via `pipx` using Python 3.12. Config at `~/.aider.conf.yml` points to `ollama_chat/qwen2.5-coder:7b` and auto-loads the master system prompt.
+
+For the most ergonomic invocation, use the **`lkai` wrapper** installed at `~/bin/lkai`. Source lives in [ai-workflows/lkai](../ai-workflows/lkai); to re-deploy: `cp ai-workflows/lkai ~/bin/lkai && chmod +x ~/bin/lkai`.
+
+### Two gotchas worth remembering
+
+**1. To CREATE a new file with Aider, pass the path as a positional argument.** Putting "create X" in `--message` alone won't work — Aider will ask "add to chat?", fail to find the file, loop, then hit reflection cap.
 
 ```bash
-brew install python  # already done in week 1
-pip3 install --user aider-chat
-# or use pipx for cleaner isolation:
-brew install pipx && pipx install aider-chat
+# ❌ won't work — file doesn't exist, Aider can't find it
+aider --message "create src/components/Login.tsx: ..."
+
+# ✅ Aider creates the empty file first, then SEARCH/REPLACE fills it
+aider src/components/Login.tsx --message "create a login form..."
+
+# ✅ same with lkai
+lkai --stack react src/components/Login.tsx --message "create a login form..."
 ```
 
-First-run config at `~/.aider.conf.yml`:
-
-```yaml
-model: ollama/qwen2.5-coder:7b
-weak-model: ollama/qwen2.5-coder:7b
-edit-format: diff
-auto-commits: true
-gitignore: true
-read:
-  - ai-prompts/prompts/system/master.md
-  - ai-memory/rules/.react-rules.md  # add per project
-```
-
-Run inside any project:
+**2. `--message` is one-shot.** For multi-turn work or "create X then fix Y", drop `--message` and use interactive mode:
 
 ```bash
-aider                                  # auto-discovers files via repo map
-aider src/auth/*.ts                    # explicit files
-aider --message "add password reset"   # one-shot
+lkai --stack react src/components/Login.tsx
+# Aider opens an interactive prompt looking like this:
+#   >
+# Type your request AFTER the > (don't type the > itself).
 ```
 
 ## Task 4 — Git-aware workflow
@@ -91,7 +91,7 @@ Keep commits small. The 7B model performs much better when each task has a clean
 
 ## Task 5 — Workflow prompts ✅
 
-Three phase prompts written. Load with `agent --phase before|during|after` or `aider --read ai-workflows/prompts/<name>-coding.md`:
+Three phase prompts written. Load with `lkai --phase before|during|after` or `aider --read ai-workflows/prompts/<name>-coding.md`:
 
 - [before-coding.md](../ai-workflows/prompts/before-coding.md) — forces the agent to **plan in 5 steps and stop for confirmation** before producing edits. Catches misunderstandings before code is written.
 - [during-coding.md](../ai-workflows/prompts/during-coding.md) — implementation rules: match before invent, one file at a time, every import resolved, trace before trust, no filler / no premature abstractions.
@@ -100,15 +100,15 @@ Three phase prompts written. Load with `agent --phase before|during|after` or `a
 These are layered with stack rules + specialized prompts. Example for a high-stakes refactor:
 
 ```bash
-agent --phase before --stack node --concern architecture-review \
+lkai --phase before --stack node --concern architecture-review \
       --message "refactor the auth middleware to support API keys alongside JWT"
-# agent stops after the plan; user confirms; switch to during phase:
+# lkai stops after the plan; user confirms; switch to during phase:
 
-agent --phase during --stack node \
+lkai --phase during --stack node \
       src/middlewares/auth.ts src/routes/api/*.ts
 
 # when satisfied, run self-review:
-agent --phase after src/middlewares/auth.ts src/routes/api/*.ts
+lkai --phase after src/middlewares/auth.ts src/routes/api/*.ts
 ```
 
 ## Verify Week 3 is good
@@ -119,14 +119,14 @@ You already passed the headline test on day 1 — `aider --message "create hello
 cd ~/some-project
 
 # casual edit, no special context:
-agent --message "rename getCwd to getCurrentWorkingDirectory everywhere"
+lkai --message "rename getCwd to getCurrentWorkingDirectory everywhere"
 
 # new feature, deliberate process:
-agent --phase before --stack react --message "add a settings page with theme + language"
+lkai --phase before --stack react --message "add a settings page with theme + language"
 # review the plan, agree, then:
-agent --phase during --stack react src/pages/settings/
+lkai --phase during --stack react src/pages/settings/
 # when implementation looks done:
-agent --phase after src/pages/settings/
+lkai --phase after src/pages/settings/
 ```
 
 Plus inline in VS Code: `Cmd+L` for chat, tab autocomplete from Qwen, `Cmd+I` to refactor highlighted code — all hitting your local Ollama.
