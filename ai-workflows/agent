@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# agent — Aider wrapper that auto-loads stack rules + specialized prompts.
+#
+# Installed at: $HOME/bin/agent (this file is the source of truth in the repo).
+# To deploy: cp ai-workflows/agent ~/bin/agent && chmod +x ~/bin/agent
+#
+# The master system prompt is auto-loaded by ~/.aider.conf.yml,
+# so it's not duplicated in --read here.
+
+set -euo pipefail
+
+AGENT_BASE="${AGENT_BASE:-$HOME/Documents/LK/Important/PersonalAIAgent}"
+
+STACK=""
+CONCERN=""
+INCLUDE_DEBUG_PLAYBOOK=0
+PHASE=""
+
+usage() {
+  cat <<EOF
+Usage: agent [--stack <name>] [--concern <name>] [--debug] [--phase <name>] [aider args...]
+
+  --stack <name>      adds ai-memory/rules/<name>-rules.md
+                      one of: node | react | flutter | swiftui | golang
+  --concern <name>    adds ai-prompts/prompts/specialized/<name>.md
+                      one of: debugging | architecture-review | code-optimization
+                              security-review | api-design | database-schema
+                              ui-generation
+  --debug             also include ai-memory/memory/debugging/<stack>.md
+                      (requires --stack)
+  --phase <name>      adds ai-workflows/prompts/<name>-coding.md
+                      one of: before | during | after
+
+All remaining args are passed through to aider.
+
+Examples:
+  agent --phase before --stack react --message "scaffold a settings page"
+  agent --stack react src/components/Login.tsx
+  agent --stack node --concern security-review src/auth/
+  agent --stack node --debug --concern debugging --message "investigate 502 on /api/orders"
+  agent --concern api-design --message "design /v1/orders endpoints"
+
+Override the base dir: AGENT_BASE=/some/path agent ...
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --stack)    STACK="$2"; shift 2 ;;
+    --concern)  CONCERN="$2"; shift 2 ;;
+    --debug)    INCLUDE_DEBUG_PLAYBOOK=1; shift ;;
+    --phase)    PHASE="$2"; shift 2 ;;
+    -h|--help)  usage; exit 0 ;;
+    *)          break ;;
+  esac
+done
+
+READS=()
+
+if [[ -n "$STACK" ]]; then
+  RULE="$AGENT_BASE/ai-memory/rules/${STACK}-rules.md"
+  if [[ -f "$RULE" ]]; then
+    READS+=(--read "$RULE")
+  else
+    echo "agent: stack rule not found: $RULE" >&2
+    echo "       known stacks: node | react | flutter | swiftui | golang" >&2
+    exit 1
+  fi
+fi
+
+if [[ -n "$CONCERN" ]]; then
+  PROMPT="$AGENT_BASE/ai-prompts/prompts/specialized/${CONCERN}.md"
+  if [[ -f "$PROMPT" ]]; then
+    READS+=(--read "$PROMPT")
+  else
+    echo "agent: concern not found: $PROMPT" >&2
+    exit 1
+  fi
+fi
+
+if [[ "$INCLUDE_DEBUG_PLAYBOOK" -eq 1 ]]; then
+  if [[ -z "$STACK" ]]; then
+    echo "agent: --debug requires --stack" >&2
+    exit 1
+  fi
+  PLAYBOOK="$AGENT_BASE/ai-memory/memory/debugging/${STACK}.md"
+  if [[ -f "$PLAYBOOK" ]]; then
+    READS+=(--read "$PLAYBOOK")
+  else
+    echo "agent: no debugging playbook for stack '$STACK' — skipping" >&2
+  fi
+fi
+
+if [[ -n "$PHASE" ]]; then
+  WORKFLOW="$AGENT_BASE/ai-workflows/prompts/${PHASE}-coding.md"
+  if [[ -f "$WORKFLOW" ]]; then
+    READS+=(--read "$WORKFLOW")
+  else
+    echo "agent: phase prompt not found: $WORKFLOW" >&2
+    echo "       known phases: before | during | after" >&2
+    exit 1
+  fi
+fi
+
+exec aider "${READS[@]}" "$@"
