@@ -24,7 +24,7 @@ usage() {
 Usage: lkai [--stack <name>] [--concern <name>] [--debug] [--phase <name>] [aider args...]
 
   --stack <name>      adds ai-memory/rules/<name>-rules.md
-                      one of: node | react | flutter | swiftui | golang
+                      one of: node | react | flutter | swiftui | golang | python
   --concern <name>    adds ai-prompts/prompts/specialized/<name>.md
                       one of: debugging | architecture-review | code-optimization
                               security-review | api-design | database-schema
@@ -73,7 +73,7 @@ if [[ -n "$STACK" ]]; then
     READS+=(--read "$RULE")
   else
     echo "lkai: stack rule not found: $RULE" >&2
-    echo "      known stacks: node | react | flutter | swiftui | golang" >&2
+    echo "      known stacks: node | react | flutter | swiftui | golang | python" >&2
     exit 1
   fi
 fi

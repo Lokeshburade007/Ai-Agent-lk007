@@ -68,7 +68,7 @@ lkai --phase after src/pages/settings/
 
 | Flag | Loads | When to use |
 |---|---|---|
-| `--stack <name>` | Stack-specific rules (`node`, `react`, `flutter`, `swiftui`, `golang`) | Any stack-specific task |
+| `--stack <name>` | Stack-specific rules (`node`, `react`, `flutter`, `swiftui`, `golang`, `python`) | Any stack-specific task |
 | `--concern <name>` | Specialized prompt (`debugging`, `architecture-review`, `code-optimization`, `security-review`, `api-design`, `database-schema`, `ui-generation`) | Focused task type |
 | `--phase <name>` | Phase prompt (`before`, `during`, `after`) | Multi-step features where you want planning + self-review |
 | `--debug` | Stack-specific debugging playbook (requires `--stack`) | Hunting a bug |
