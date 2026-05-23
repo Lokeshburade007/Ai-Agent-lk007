@@ -19,12 +19,23 @@ Total disk: ~14GB out of 60+GB free. Nothing to prune yet.
 
 **RAM management** during long Aider sessions:
 ```bash
-ollama ps                       # see what's loaded in memory
-ollama stop                     # unloads all models
-brew services restart ollama    # if Ollama process gets stuck
+ollama ps                                   # see what's loaded in memory
+ollama stop qwen2.5-coder:7b                # unload a SPECIFIC model
+# unload everything currently loaded:
+for m in $(ollama ps | tail -n +2 | awk '{print $1}'); do ollama stop "$m"; done
+brew services stop ollama                   # nuclear: kill the whole service
+brew services start ollama                  # turn it back on
+brew services restart ollama                # if Ollama process gets stuck
 ```
 
-If you ever see Activity Monitor showing 14GB+ used by ollama, that's hitting the 16GB ceiling and swapping. Run `ollama stop` between sessions. For sustained heavy use, this is the actual upper bound on the M2.
+**Default behavior** (Ollama 0.24+): models auto-unload **5 min** after the last request. So in most cases you don't have to do anything — close VS Code, walk away, RAM is back automatically.
+
+When to manually intervene:
+- Need RAM RIGHT NOW (Chrome is choking) → `brew services stop ollama`
+- Going AFK for hours → `brew services stop ollama` (start it again when back)
+- If Activity Monitor shows 14GB+ used by ollama → you're at the 16GB ceiling, swap kicks in. Unload models or `brew services stop ollama`.
+
+The CLI command `ollama stop` (no model name) does NOT work — it requires a specific model name in v0.24. Use the loop one-liner above for "stop all."
 
 **When to revisit Task 1 for real:**
 - After 1–2 weeks: which model do you actually run? Keep that one; consider dropping the other.
