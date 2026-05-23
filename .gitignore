@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Aider working files (auto-added to project .gitignore by aider too)
+.aider*
+!.aider.conf.yml
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Env / secrets
+.env
+.env.local

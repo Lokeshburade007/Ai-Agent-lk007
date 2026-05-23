@@ -1,0 +1,27 @@
+# Aider config for PersonalAIAgent and any project that copies this file.
+# Docs: https://aider.chat/docs/config/aider_conf.html
+
+# Default model — local Qwen via Ollama
+model: "ollama_chat/qwen2.5-coder:7b"
+
+# Use the same model for "weak" tasks (commit messages, summaries) to avoid extra downloads
+weak-model: "ollama_chat/qwen2.5-coder:7b"
+
+# Edit format that works best with small models (exact SEARCH/REPLACE blocks)
+edit-format: diff
+
+# Auto-commit accepted edits so you get free undo via `git reset`
+auto-commits: true
+
+# Respect .gitignore when building the repo map
+gitignore: true
+
+# Allow longer context for Qwen (default is too small)
+# Qwen2.5-Coder 7B supports up to 32k tokens
+# Set via env var below — see OLLAMA_NUM_CTX
+
+# Files to always read in as context (paths relative to where you run aider)
+# Uncomment and edit per project:
+# read:
+#   - ai-prompts/prompts/system/master.md
+#   - ai-memory/rules/.react-rules.md
